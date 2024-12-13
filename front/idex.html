@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>便當店 - 使用者管理</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+    }
+    table {
+      width: 100%;
+      margin-top: 20px;
+      border-collapse: collapse;
+    }
+    table, th, td {
+      border: 1px solid #ddd;
+    }
+    th, td {
+      padding: 8px;
+      text-align: left;
+    }
+    button {
+      padding: 8px 16px;
+      margin-top: 10px;
+      cursor: pointer;
+    }
+    form {
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>便當店 - 使用者管理</h1>
+
+  <!-- 顯示所有使用者 -->
+  <h2>所有使用者</h2>
+  <table id="usersTable">
+    <thead>
+      <tr>
+        <th>姓名</th>
+        <th>公司</th>
+        <th>電子郵件</th>
+        <th>電話</th>
+        <th>操作</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- 使用者列表將由 JavaScript 填充 -->
+    </tbody>
+  </table>
+
+  <!-- 新增使用者表單 -->
+  <h2>新增使用者</h2>
+  <form id="userForm">
+    <label for="name">姓名：</label>
+    <input type="text" id="name" required><br><br>
+    <label for="company">公司：</label>
+    <input type="text" id="company"><br><br>
+    <label for="email">電子郵件：</label>
+    <input type="email" id="email"><br><br>
+    <label for="phone">電話：</label>
+    <input type="text" id="phone"><br><br>
+    <button type="submit">新增使用者</button>
+  </form>
+
+  <script>
+    const apiUrl = 'http://localhost:5000/users'; // 後端 API 路徑
+
+    // 獲取並顯示所有使用者
+    function getUsers() {
+      fetch(apiUrl)
+        .then(response => response.json())
+        .then(users => {
+          const tableBody = document.querySelector("#usersTable tbody");
+          tableBody.innerHTML = ''; // 清空現有資料
+          users.forEach(user => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+              <td>${user.name}</td>
+              <td>${user.company || '無'}</td>
+              <td>${user.email}</td>
+              <td>${user.phone}</td>
+              <td>
+                <button onclick="deleteUser(${user.id})">刪除</button>
+              </td>
+            `;
+            tableBody.appendChild(row);
+          });
+        })
+        .catch(error => console.error('獲取使用者時出錯:', error));
+    }
+
+    // 刪除使用者
+    function deleteUser(userId) {
+      fetch(`${apiUrl}/${userId}`, {
+        method: 'DELETE',
+      })
+        .then(response => response.text())
+        .then(() => {
+          alert('使用者已刪除');
+          getUsers(); // 刪除後重新加載使用者列表
+        })
+        .catch(error => console.error('刪除使用者時出錯:', error));
+    }
+
+    // 處理新增使用者表單提交
+    document.getElementById('userForm').addEventListener('submit', function(event) {
+      event.preventDefault(); // 防止表單提交刷新頁面
+
+      const name = document.getElementById('name').value;
+      const company = document.getElementById('company').value;
+      const email = document.getElementById('email').value;
+      const phone = document.getElementById('phone').value;
+
+      // 發送 POST 請求新增使用者
+      fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name,
+          company,
+          email,
+          phone,
+        }),
+      })
+        .then(response => response.json())
+        .then(newUser => {
+          alert('新增使用者成功');
+          getUsers(); // 新增後重新加載使用者列表
+          document.getElementById('userForm').reset(); // 重設表單
+        })
+        .catch(error => console.error('新增使用者時出錯:', error));
+    });
+
+    // 頁面載入後自動獲取並顯示所有使用者
+    window.onload = function() {
+      getUsers();
+    };
+  </script>
+
+</body>
+</html>
